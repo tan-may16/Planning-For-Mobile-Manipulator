@@ -4,6 +4,8 @@
         "vector": "cpp",
         "ostream": "cpp",
         "cmath": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "chrono": "cpp",
+        "array": "cpp"
     }
 }

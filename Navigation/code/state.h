@@ -14,12 +14,15 @@ class state {
     {
         this->x = robotposx;
         this->y = robotposy;
-        this->theta = theta;
+        this->theta = (int)theta%360;
         parent = NULL;
         this->g_cost = INT_MAX;
         this->h_cost = 0;
         this->f_cost = INT_MAX;
         state_expanded = false;
     }
-    
+    // ~state()
+    // {
+    //     delete this->parent;
+    // }
 };
