@@ -20,6 +20,7 @@
 Node to publish velocity command to the topic /robot_base_velocity_controller/cmd_vel
 */
 geometry_msgs::PoseStamped current_pose;
+geometry_msgs::Pose2D goal_pose;
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg)
 {
@@ -191,7 +192,7 @@ int main(int argc, char **argv)
     // subscribe to the topic /base_truth_odom
     ros::Subscriber sub = nh.subscribe("/base_truth_odom", 1000, &odomCallback);
 
-    ros::Rate rate(100000);
+    ros::Rate rate(1e15);
 
     // create a dummy plan vector of 10 points
     std::vector<geometry_msgs::Pose2D> plan;
@@ -221,12 +222,6 @@ int main(int argc, char **argv)
         parse2DAstarPlan(plan, filePath);
     else if (option == '2')
         parse3DAstarPlan(plan, filePath);
-
-    double endYaw = 0.0;
-    double startYaw = 0.0;
-    double yawIncrement = 0.0;
-    bool rotationStarted = false;
-    bool translationStarted = false;
     
     // check is the current pose is close to the first point in the plan
     // if yes, remove the first point from the plan
@@ -238,11 +233,36 @@ int main(int argc, char **argv)
         // check if the plan is empty
         if (plan.empty())
         {
-            // if yes, stop the robot
             geometry_msgs::Twist vel;
             vel.linear.x = 0;
-            vel.angular.z = 0;
-            pub.publish(vel);
+            tf::Quaternion q(current_pose.pose.orientation.x, 
+                            current_pose.pose.orientation.y, 
+                            current_pose.pose.orientation.z, 
+                            current_pose.pose.orientation.w);
+            tf::Matrix3x3 m(q);
+            double roll, pitch, yaw;
+            m.getRPY(roll, pitch, yaw);
+
+            wrapAngle(yaw);
+            wrapAngle(goal_pose.theta);
+
+            // correct the orientation of the robot based on theta in goal_pose
+            if (abs(yaw - goal_pose.theta) > 0.1)
+            {
+                ROS_INFO_THROTTLE(1, "Correcting orientation");
+                if (yaw > goal_pose.theta)
+                    vel.angular.z = -0.2;
+                else
+                    vel.angular.z = 0.2;
+                pub.publish(vel);
+            }
+            else
+            {
+                vel.angular.z = 0.0;
+                pub.publish(vel);
+                // exit the while loop
+                break;
+            }
         }
         else
         {
@@ -275,7 +295,6 @@ int main(int argc, char **argv)
                 // if current pose is 0, 0, 0 then continue
                 if (current_pose.pose.position.x == 0 && current_pose.pose.position.y == 0)
                 {
-                    ROS_INFO("Current pose is 0, 0, 0");
                     geometry_msgs::Twist vel;
                     vel.linear.x = 0;
                     vel.angular.z = 0;
@@ -292,24 +311,24 @@ int main(int argc, char **argv)
 
                 geometry_msgs::Twist vel;
 
-                if (abs(angleToGoal - yaw) > 0.1)
+                if (abs(angleToGoal - yaw) > 0.08)
                 {
                     // ROS_INFO("Rotating to goal");
                     // ROS_INFO("angleToGoal: %f, yaw: %f", angleToGoal, yaw);
                     vel.linear.x = 0;
                     if (angleToGoal > yaw)
                     {
-                        vel.angular.z = 0.2;
+                        vel.angular.z = 0.5;
                     }
                     else
                     {
-                        vel.angular.z = -0.2;
+                        vel.angular.z = -0.5;
                     }
                 }
                 else
                 {
                     // ROS_INFO("Moving to goal");
-                    vel.linear.x = 0.1;
+                    vel.linear.x = 0.5;
                     vel.angular.z = 0;
                 }
 
@@ -318,6 +337,8 @@ int main(int argc, char **argv)
                 if (equalPoses(current_pose, first_point))
                 {
                     ROS_INFO("=========================================>>>> Reached goal");
+                    // store the executed plan pose as goal_pose
+                    goal_pose = first_point;
                     plan.pop_back();
                 }
             }
@@ -326,5 +347,6 @@ int main(int argc, char **argv)
         ros::spinOnce();
         rate.sleep();
     }
-    
+    std::cout << "Trajectory completed" << std::endl;
+    return 0;    
 }

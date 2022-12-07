@@ -5,21 +5,20 @@ export YAW_INIT=$3
 export X_GOAL=$4
 export Y_GOAL=$5
 export YAW_GOAL=$6
+export THETA_1=$7
+export THETA_2=$8
+export THETA_3=$9
+export THETA_4=${10}
+export THETA_5=${11}
+replanFlag=0
 
-killall -9 gzserver
+./basePlanner.sh $X_INIT $Y_INIT $YAW_INIT $X_GOAL $Y_GOAL $YAW_GOAL $replanFlag
 
-export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:$(pwd)/gazebo_models_worlds_collection/models
-# Launching the PLANNER
-g++ ./Navigation/code/A_star.cpp -o ./Navigation/code/a.out
-./Navigation/code/a.out $X_INIT $Y_INIT $YAW_INIT $X_GOAL $Y_GOAL $YAW_GOAL
+# perform arm movement using RRT Star
+# roslaunch mobile_manipulator_moveit_config move_group.launch
+mate-terminal --tab --title="moveit" --command="bash -c 'roslaunch mobile_manipulator_moveit_config move_group.launch && sleep 5'" &
+sleep 5
 
-# visualizing the 2D path
-python3 ./Navigation/code/visualize.py --type 3D
-python3 ./Navigation/code/visualize.py --type 2D
 
-# Launching the robot in gazebo
-roslaunch mobile_manipulator mobile_manipulator_gazebo.launch x:=$X_INIT y:=$Y_INIT yaw:=$YAW_INIT &
-sleep 15
-
-# performing movement
-rosrun mobile_manipulator planToVel ./Navigation/code/office_3d.txt 2
+mate-terminal --tab --title="armPlanner" -e "bash -c 'rosrun moveit_commander moveit_commander_cmdline.py&& sleep 10'" &
+mate-terminal --tab --title="armPlanner_command" -e "bash -c './armPlanner.sh $X_INIT $Y_INIT $YAW_INIT $X_GOAL $Y_GOAL $YAW_GOAL $THETA_1 $THETA_2 $THETA_3 $THETA_4 $THETA_5 && sleep 3'" &
