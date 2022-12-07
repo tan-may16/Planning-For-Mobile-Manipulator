@@ -8,6 +8,8 @@
 #include <chrono>
 #include <fstream>
 #include <cmath>
+#include <filesystem>
+
 using namespace std::chrono;
 using namespace std;
 
@@ -76,8 +78,14 @@ double* create_map(string file_path, pair <int, int> map_size)
     
     int x_size = map_size.first;
     int y_size = map_size.second;
-    cout<< x_size << " "<< y_size << endl;
+    cout<< "Map Size: "<<x_size << " "<< y_size << endl;
     std::ifstream input(file_path);
+    //check if file is open
+    if (!input.is_open())
+    {
+        cout << "Error opening file";
+        exit (1);
+    }
     double* map = new double[x_size*y_size];
     for( std::string line; getline( input, line );)
     {
@@ -166,7 +174,11 @@ void A_star_2D(int dX[],int dY[], int Gx, int Gy, double*map, int collision_thre
     {
         
         current = OPEN.top();
-        if (policy == false && current->x == Gx && current->y == Gy) break;
+        if (policy == false && current->x == Gx && current->y == Gy) 
+        {
+            cout<< "Goal Cost: " << current->g_cost<<endl;
+            break;
+        }
         
         OPEN.pop();
         current->state_expanded = true;
@@ -182,13 +194,16 @@ void A_star_2D(int dX[],int dY[], int Gx, int Gy, double*map, int collision_thre
                 if (successor->x >= 0 && successor->x < x_size && successor->y >= 0 && successor->y < y_size && Is_valid(map, successor, 1, 1, x_size, y_size))
                 {
                     int index_succ = GETMAPINDEX(successor->x,successor->y,x_size,y_size);
-                    int cost = (int)map[index_succ];
-                    if ((cost >= 0) && (cost < collision_thresh) && successor->state_expanded == false) 
+                    // int cost = (int)map[index_succ];
+                    int cost;
+                    if (abs(dX[dir]) + abs(dY[dir]) ==2) cost = 1.5;
+                    else cost = 1;
+                    if ((cost >= 0) && (map[index_succ] < collision_thresh) && successor->state_expanded == false) 
                     {
-                        if (successor->g_cost > current->g_cost +(int)map[index_succ])
+                        if (successor->g_cost > current->g_cost +cost)
                         {                 
                             successor->h_cost = successor->h_cost = weight*heurastic_2D_optimal(successor->x,successor->y,Gx,Gy);
-                            successor->g_cost = current->g_cost +(int)map[index_succ];
+                            successor->g_cost = current->g_cost +cost;
                             successor->f_cost = successor->g_cost + successor->h_cost;
                             successor->parent = current;
 
@@ -206,13 +221,13 @@ void A_star_2D(int dX[],int dY[], int Gx, int Gy, double*map, int collision_thre
                     int index_succ = GETMAPINDEX(successor->x,successor->y,x_size,y_size);
                     // TODO: check for diagonal cost
                     int cost;
-                    if (abs(dX[dir]) + abs(dY[dir]) ==2) cost = 2;
+                    if (abs(dX[dir]) + abs(dY[dir]) ==2) cost = 1.5;
                     else cost = 1;
                     if ((cost >= 0) && (map[index_succ] < collision_thresh) && successor->state_expanded == false) 
                     {
                         if (successor->g_cost > current->g_cost +cost)
                         {                 
-                            successor->h_cost = successor->h_cost = weight*heurastic_2D_diagonal(successor->x,successor->y,Gx,Gy);
+                            successor->h_cost = successor->h_cost = weight*heurastic_2D_optimal(successor->x,successor->y,Gx,Gy);
                             successor->g_cost = current->g_cost +cost;
                             successor->f_cost = successor->g_cost + successor->h_cost;
                             successor->parent = current;
@@ -240,8 +255,8 @@ void A_star_2D(int dX[],int dY[], int Gx, int Gy, double*map, int collision_thre
             // cout<<"policy found"<<endl;
             auto end_time = high_resolution_clock::now();
             auto duration_time = duration_cast<milliseconds>(end_time - start_time);
-            cout<< ("Time required for policy: %d milliseconds",duration_time.count())<<endl;
-            cout<< ("No. of states expanded: %d ",OPEN_STATES.size())<<endl;
+            // cout<< ("Time required for policy: %d milliseconds",duration_time.count())<<endl;
+            // cout<< ("No. of states expanded: %d ",OPEN_STATES.size())<<endl;
         }
     if (policy == false && backtrack == true) get_path(current, path);
 
@@ -318,7 +333,7 @@ pair <array<int,NUMOFDIRS_3D>,array<int,NUMOFDIRS_3D>> get_dx_dy(int theta)
     }
     else
     {
-        cout<< "Error with angle"<<endl;
+        cout<< "Problem with given angle"<<endl;
         dX = {0,0,0};
         dY = {0,0,0};
         return make_pair(dX,dY);
@@ -326,16 +341,13 @@ pair <array<int,NUMOFDIRS_3D>,array<int,NUMOFDIRS_3D>> get_dx_dy(int theta)
     
 }
 
-void shift_coordinates(vector<state*> &path, int x_size, int y_size)
+void shift_coordinates(float &x, float &y, pair<int, int> map_size)
 {
-    for (int i=0; i<path.size();i++ )
-    {
-        path[i]->x -= x_size/2.0;
-        path[i]->y -= y_size/2.0;
-        path[i]->y = -path[i]->y;
-        path[i]->theta *= 3.14159265/180.0;      
-    }
-}   
+    float scaled_x_size = map_size.first/2;
+    float scaled_y_size = map_size.second/2;
+    x = 2*x + scaled_x_size;
+    y = -2*y + scaled_y_size;
+}
 
 
 bool Is_valid_3D(state* current, double * map,int x_size, int y_size, int collision_thresh)
@@ -420,7 +432,7 @@ void A_star_3D(int dTheta_3D[], int Gx, int Gy, int Gtheta, int Rx, int Ry, int 
     int dY_2D[NUMOFDIRS] = {-1,  0,  1, -1,  1, -1, 0, 1};
 
     A_star_2D(dX_2D, dY_2D, start->x, start->y, map, 257, x_size, y_size, goal->x, goal->y, OPEN_STATES_3D_temp, path_3D_temp, true, weight = 1, false, false);
-    cout<< OPEN_STATES_3D_temp.size()<<endl;
+    // cout<< OPEN_STATES_3D_temp.size()<<endl;
     state *successor = new state();
     state *current = new state(Rx, Ry, Rtheta);
     current->g_cost = 0;
@@ -433,11 +445,11 @@ void A_star_3D(int dTheta_3D[], int Gx, int Gy, int Gtheta, int Rx, int Ry, int 
     while (!OPEN.empty())
     {
         // cout<< "Open list size: "<<OPEN.size()<<endl;
-        if (while_count%100000 == 0) cout<<while_count<<endl;
+        // if (while_count%100000 == 0) cout<<while_count<<endl;
         current = OPEN.top();
         if (policy == false && current->x == Gx && current->y == Gy && current->theta == Gtheta) 
         {
-            cout<< "Cost of goal"<<current->g_cost<<endl;
+            cout<< "Cost of goal: "<<current->g_cost<<endl;
             break;
         }
                 
@@ -504,12 +516,11 @@ void A_star_3D(int dTheta_3D[], int Gx, int Gy, int Gtheta, int Rx, int Ry, int 
         }
 
     }
-    cout<< OPEN.size()<<endl;
-    cout<<OPEN_STATES_3D.size()<<endl;
+    cout<< "Number of states in Open Queue: "<<OPEN.size()<<endl;
+    cout<<"No. of States expanded: "<<OPEN_STATES_3D.size()<<endl;
     if (policy == false) 
     {
         get_path(current, path_3D);
-        // shift_coordinates(path_3D,x_size,y_size);
         
     }
 
@@ -519,37 +530,49 @@ void A_star_3D(int dTheta_3D[], int Gx, int Gy, int Gtheta, int Rx, int Ry, int 
 
 
 
-int main()
+int main(int argc, char **argv)
 {
-    
-    pair <array<int,NUMOFDIRS_3D>,array<int,NUMOFDIRS_3D>> delta = get_dx_dy(0);
-    for (int i = 0;i<NUMOFDIRS_3D;i++)
-    {
-        cout<< delta.first[i] << "," <<delta.second[i] <<endl;
-    }
-    unordered_map <int , state*> OPEN_STATES;
-    vector<state*> path;
-    
-    pair<int, int> map_size = get_dimensions("office.txt");
-    double* map = create_map("office.txt",map_size);
-    int dX[NUMOFDIRS] = {-1, -1, -1,  0,  0,  1, 1, 1};
-    int dY[NUMOFDIRS] = {-1,  0,  1, -1,  1, -1, 0, 1};
-    
-    // A_star_2D(dX, dY, 16, 6, map, 100, map_size.first, map_size.second, 3, 4, OPEN_STATES, path, false, 1, true, false);
-    // cout<<"States expanded: "<<OPEN_STATES.size()<<endl;
-    
-    // ofstream myfile ("A*.txt");
-    // if (myfile.is_open())
-    // {
-    //     for (int i =0;i<path.size();i++)
-    //     {
-    //         myfile << path[i]->x <<","<< path[i]->y<<endl;
-    //     }
-    //     myfile.close();
-    // }
-    // else cout << "Unable to open file";
+    // take robot intial and goal position as input
+    float Rx = argc > 1 ? atof(argv[1]) : 0;
+    float Ry = argc > 2 ? atof(argv[2]) : 0;
+    int Rtheta = argc > 3 ? atoi(argv[3]) : 0;
+    float Gx = argc > 4 ? atof(argv[4]) : 0;
+    float Gy = argc > 5 ? atof(argv[5]) : 0;
+    int Gtheta = argc > 6 ? atoi(argv[6]) : 0;
 
-    ofstream myfile_ ("office_map.txt");
+    string cwd = argv[0];
+    cwd = cwd.substr(0, cwd.find_last_of("/\\"));
+    cout << "\nCurrent working directory: " << cwd << endl;
+
+    string map_file_path = cwd + "/office.txt";
+    string map_save_path = cwd + "/office_map.txt";
+    string path_2D_file_path = cwd + "/office_2d.txt";
+    string path_3D_file_path = cwd + "/office_3d.txt";
+    // pair <array<int,NUMOFDIRS_3D>,array<int,NUMOFDIRS_3D>> delta = get_dx_dy(0);
+    // for (int i = 0;i<NUMOFDIRS_3D;i++)
+    // {
+    //     cout<< delta.first[i] << "," <<delta.second[i] <<endl;
+    // }
+
+    pair<int, int> map_size = get_dimensions(map_file_path);
+    
+    // Shifting ccordinates to pixel frame
+    shift_coordinates(Rx, Ry, map_size);
+    shift_coordinates(Gx, Gy, map_size);
+
+    int Rx_pixel = (int)Rx;
+    int Ry_pixel = (int)Ry;
+
+    int Gx_pixel = (int)Gx;
+    int Gy_pixel = (int)Gy;
+
+    // print shifted coordinates
+    cout << "Robot Initial Position: " << Rx_pixel << "," << Ry_pixel << "," << Rtheta << endl;
+    cout << "Goal Position: " << Gx_pixel << "," << Gy_pixel << "," << Gtheta << endl;
+
+    double* map = create_map(map_file_path, map_size);
+    // Create and save own map format
+    ofstream myfile_ (map_save_path);
     if (myfile_.is_open())
     {
         myfile_ << "#" << map_size.first << "," << map_size.second <<endl;
@@ -564,44 +587,85 @@ int main()
         myfile_.close();
     }
     else cout << "Unable to open file";
+
+    unordered_map <int , state*> OPEN_STATES;
+    vector<state*> path;
+
+    // int Gx,Gy,Gtheta,Rx,Ry,Rtheta;
+    int collision_thresh,weight;
+    bool policy,get_path, check_validity;
+    // Gx = 15;
+    // Gy = 4;
+    // Gtheta = 0;
+    // Rx = 3;
+    // Ry = 16;
+    // Rtheta = 0; 
+    // Gx = 15;
+    // Gy = 4;
+    // Gtheta = 90;
+    // Rx = 3;
+    // Ry = 16;
+    // Rtheta = 45; 
+    collision_thresh = 100;
+    weight = 1;
+    policy = false;
+    get_path = true;
+    check_validity = true;
+    int dX[NUMOFDIRS] = {-1, -1, -1,  0,  0,  1, 1, 1};
+    int dY[NUMOFDIRS] = {-1,  0,  1, -1,  1, -1, 0, 1};
+    
+
+     // 2D A*
+    cout << "2D A* Implemented:"<<endl;
+    A_star_2D(dX, dY, Gx_pixel, 
+            Gy_pixel, map, collision_thresh, 
+            map_size.first, map_size.second, 
+            Rx_pixel, Ry_pixel, OPEN_STATES, 
+            path, policy, weight, get_path, 
+            check_validity);
+
+    ofstream myfile_2d (path_2D_file_path);
+    if (myfile_2d.is_open())
+    {
+        for (int i =0;i<path.size();i++)
+        {
+            myfile_2d << path[i]->x <<","<< path[i]->y<<endl;
+        }
+        myfile_2d.close();
+    }
+    else cout << "Unable to open file";
+
+
     
     
+    // 3D A*
     int dTheta_3D[NUMOFDIRS_3D] = {45, 0, 315};
     unordered_map <int , state*> OPEN_STATES_3D;
     vector<state*> path_3D;
-// 16,6, 0, 6,16, 0,
-    A_star_3D(dTheta_3D, 15,4, 0, 3,16, 0, map, 150, map_size.first, map_size.second, 8,  OPEN_STATES_3D, path_3D, false, 1);
-    cout<<path_3D.size()<<endl;
 
-    ofstream myfile ("office_3d_path.txt");
-    if (myfile.is_open())
+//  working example: G: 6,6, 0 R: 6,16, 0,
+
+    cout << endl <<"3D A* Implemented:"<<endl;
+    A_star_3D(dTheta_3D, Gx_pixel, Gy_pixel, 
+            Gtheta, Rx_pixel, Ry_pixel, 
+            Rtheta, map, collision_thresh, 
+            map_size.first, map_size.second, 
+            8,  OPEN_STATES_3D, path_3D, 
+            false, weight);
+    cout<<"Path size: "<<path_3D.size()<<endl;
+
+    ofstream myfile_3d (path_3D_file_path);
+    if (myfile_3d.is_open())
     {
         for (int i =0;i<path_3D.size();i++)
         {
-            myfile << path_3D[i]->x <<","<< path_3D[i]->y << "," << path_3D[i]->theta<<endl;
+            myfile_3d << path_3D[i]->x <<","<< path_3D[i]->y << "," << path_3D[i]->theta<<endl;
         }
-        myfile.close();
+        myfile_3d.close();
     }
     else cout << "Unable to open file";
 
    
-    
-    // int count = 0;
-    // for (int i=0;i<map_size.first;i++)
-    // {
-    //     for (int j = 0;j < map_size.second;j++)
-    //     {
-    //         for (int k=0;k<8;k++)
-    //         {
-    //             if (OPEN_STATES_3D.count(GETMAPINDEX_3D(i,j,k,map_size.first, map_size.second, 8)) == 0)
-    //             {
-    //                 cout<< i <<","<<j<<","<<k<<endl;
-    //                 count++;
-    //             }
-    //         }
-    //     }
-    // }
-    // cout<<count<<endl;
     return 0;
 }
 
