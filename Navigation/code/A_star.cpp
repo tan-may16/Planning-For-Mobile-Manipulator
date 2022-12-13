@@ -611,18 +611,6 @@ int main(int argc, char **argv)
     // int Gx,Gy,Gtheta,Rx,Ry,Rtheta;
     int collision_thresh,weight;
     bool policy,get_path, check_validity;
-    // Gx = 15;
-    // Gy = 4;
-    // Gtheta = 0;
-    // Rx = 3;
-    // Ry = 16;
-    // Rtheta = 0; 
-    // Gx = 15;
-    // Gy = 4;
-    // Gtheta = 90;
-    // Rx = 3;
-    // Ry = 16;
-    // Rtheta = 45; 
     collision_thresh = 100;
     weight = 1;
     policy = false;
@@ -633,6 +621,8 @@ int main(int argc, char **argv)
     
 
      // 2D A*
+     // Start clock
+    auto start = high_resolution_clock::now();
     cout << "2D A* Implemented:"<<endl;
     A_star_2D(dX, dY, Gx_pixel, 
             Gy_pixel, map, collision_thresh, 
@@ -640,6 +630,11 @@ int main(int argc, char **argv)
             Rx_pixel, Ry_pixel, OPEN_STATES, 
             path, policy, weight, get_path, 
             check_validity);
+    // Stop clock   
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    cout << "Time taken by 2D A Star: "
+         << duration.count() << " microseconds" << endl;
 
     ofstream myfile_2d (path_2D_file_path);
     if (myfile_2d.is_open())
@@ -651,17 +646,14 @@ int main(int argc, char **argv)
         myfile_2d.close();
     }
     else cout << "Unable to open file";
-
-
-    
     
     // 3D A*
     int dTheta_3D[NUMOFDIRS_3D] = {45, 0, 315};
     unordered_map <int , state*> OPEN_STATES_3D;
     vector<state*> path_3D;
 
-//  working example: G: 6,6, 0 R: 6,16, 0,
-
+    // Start clock
+    start = high_resolution_clock::now();
     cout << endl <<"3D A* Implemented:"<<endl;
     A_star_3D(dTheta_3D, Gx_pixel, Gy_pixel, 
             Gtheta, Rx_pixel, Ry_pixel, 
@@ -669,6 +661,11 @@ int main(int argc, char **argv)
             map_size.first, map_size.second, 
             8,  OPEN_STATES_3D, path_3D, 
             false, weight);
+    // Stop clock
+    stop = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(stop - start);
+    cout << "Time taken by 3D A Star: "
+         << duration.count() << " microseconds" << endl;
     cout<<"Path size: "<<path_3D.size()<<endl;
 
     ofstream myfile_3d (path_3D_file_path);
