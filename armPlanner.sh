@@ -12,6 +12,8 @@ export THETA_4=${10}
 export THETA_5=${11}
 
 replanFlag=1
+resolution=10
+size=220
 
 xdotool key ctrl+Page_Up
 xdotool type "use arm"
@@ -41,12 +43,12 @@ xdotool key Return
 
 # YAW_INIT is converted to negative because the robot is facing the opposite direction in gazebo
 
-export YAW_INIT=$((YAW_INIT+180))
-export YAW_INIT=$((YAW_INIT%360))
+export YAW_INIT_NEW=$((YAW_INIT+180))
+export YAW_INIT_NEW=$((YAW_INIT%360))
 
 # YAW_GOAL is converted to negative because the robot is facing the opposite direction in gazebo
 
-export YAW_GOAL=$((YAW_GOAL+180))
-export YAW_GOAL=$((YAW_GOAL%360))
+export YAW_GOAL_NEW=$((YAW_GOAL+180))
+export YAW_GOAL_NEW=$((YAW_GOAL%360))
 
-./basePlanner.sh $X_GOAL $Y_GOAL $YAW_GOAL $X_INIT $Y_INIT $YAW_INIT $replanFlag
+#./basePlanner.sh $X_GOAL $Y_GOAL $YAW_GOAL $X_INIT $Y_INIT $YAW_INIT_NEW $replanFlag $resolution $size

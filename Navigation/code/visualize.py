@@ -28,7 +28,8 @@ with open(base_path +'/office_map.txt') as f:
          map[x,y] = z
 
 
-
+# print all unique values in map
+print(np.unique(map))
 # For 2D
 if (args.type == '2D'):
     with open(base_path +'/office_2d.txt') as f:

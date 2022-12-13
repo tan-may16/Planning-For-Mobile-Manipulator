@@ -11,8 +11,10 @@ export THETA_3=$9
 export THETA_4=${10}
 export THETA_5=${11}
 replanFlag=0
+resolution=10
+size=220
 
-./basePlanner.sh $X_INIT $Y_INIT $YAW_INIT $X_GOAL $Y_GOAL $YAW_GOAL $replanFlag
+./basePlanner.sh $X_INIT $Y_INIT $YAW_INIT $X_GOAL $Y_GOAL $YAW_GOAL $replanFlag $resolution $size
 
 # perform arm movement using RRT Star
 # roslaunch mobile_manipulator_moveit_config move_group.launch
@@ -21,4 +23,5 @@ sleep 5
 
 
 mate-terminal --tab --title="armPlanner" -e "bash -c 'rosrun moveit_commander moveit_commander_cmdline.py&& sleep 10'" &
+sleep 5
 mate-terminal --tab --title="armPlanner_command" -e "bash -c './armPlanner.sh $X_INIT $Y_INIT $YAW_INIT $X_GOAL $Y_GOAL $YAW_GOAL $THETA_1 $THETA_2 $THETA_3 $THETA_4 $THETA_5 && sleep 3'" &

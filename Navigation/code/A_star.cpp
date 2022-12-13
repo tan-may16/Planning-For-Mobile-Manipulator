@@ -45,7 +45,7 @@ bool Is_valid(double* map, state* current, int dx, int dy, int x_size, int y_siz
         int succ1 = (int)GETMAPINDEX(current->x + dx, current->y + j, x_size,y_size);
         int succ2 = (int)GETMAPINDEX(current->x - dx, current->y - j, x_size,y_size);
         
-        if (map[succ1]>= collision_thresh ||map[succ2]>= collision_thresh) return false;
+        if (map[succ1]>= collision_thresh || map[succ2]>= collision_thresh || map[succ1] == 50 || map[succ2] == 50) return false;
     }
     
     return true;
@@ -191,14 +191,14 @@ void A_star_2D(int dX[],int dY[], int Gx, int Gy, double*map, int collision_thre
             else successor = OPEN_STATES[ind];
             if (check_validity)
             {
-                if (successor->x >= 0 && successor->x < x_size && successor->y >= 0 && successor->y < y_size && Is_valid(map, successor, 1, 1, x_size, y_size))
+                if (successor->x >= 0 && successor->x < x_size && successor->y >= 0 && successor->y < y_size && Is_valid(map, successor, 3, 3, x_size, y_size))
                 {
                     int index_succ = GETMAPINDEX(successor->x,successor->y,x_size,y_size);
                     // int cost = (int)map[index_succ];
                     int cost;
                     if (abs(dX[dir]) + abs(dY[dir]) ==2) cost = 1.5;
                     else cost = 1;
-                    if ((cost >= 0) && (map[index_succ] < collision_thresh) && successor->state_expanded == false) 
+                    if ((cost >= 0) && (map[index_succ] < collision_thresh) && successor->state_expanded == false  && (map[index_succ] != 50)) 
                     {
                         if (successor->g_cost > current->g_cost +cost)
                         {                 
@@ -223,7 +223,7 @@ void A_star_2D(int dX[],int dY[], int Gx, int Gy, double*map, int collision_thre
                     int cost;
                     if (abs(dX[dir]) + abs(dY[dir]) ==2) cost = 1.5;
                     else cost = 1;
-                    if ((cost >= 0) && (map[index_succ] < collision_thresh) && successor->state_expanded == false) 
+                    if ((cost >= 0) && (map[index_succ] < collision_thresh) && successor->state_expanded == false && (map[index_succ] != 50)) 
                     {
                         if (successor->g_cost > current->g_cost +cost)
                         {                 
@@ -341,19 +341,20 @@ pair <array<int,NUMOFDIRS_3D>,array<int,NUMOFDIRS_3D>> get_dx_dy(int theta)
     
 }
 
-void shift_coordinates(float &x, float &y, pair<int, int> map_size)
+void shift_coordinates(float &x, float &y, pair<int, int> map_size,const float& resolution)
 {
     float scaled_x_size = map_size.first/2;
     float scaled_y_size = map_size.second/2;
-    x = 2*x + scaled_x_size;
-    y = -2*y + scaled_y_size;
+    x = x/resolution + scaled_x_size;
+    y = -y/resolution + scaled_y_size;
 }
-
 
 bool Is_valid_3D(state* current, double * map,int x_size, int y_size, int collision_thresh)
 {
     array<int,NUMOFDIRS_3D> dX;
     array<int,NUMOFDIRS_3D> dY;
+    array<int,NUMOFDIRS_3D+2> dXD;
+    array<int,NUMOFDIRS_3D+2> dYD;
     int theta = current->theta;
     if (theta == 0)
     {
@@ -365,8 +366,8 @@ bool Is_valid_3D(state* current, double * map,int x_size, int y_size, int collis
     }
     else if (theta == 315)
     {
-        dX = {1,1,0};
-        dY = {0,1,1};
+        dXD = {1,1,0,-1,1};
+        dYD = {0,1,1,1,-1};
        
     }
     else if (theta == 270)
@@ -377,8 +378,8 @@ bool Is_valid_3D(state* current, double * map,int x_size, int y_size, int collis
     }
     else if (theta == 225)
     {
-        dX = {0,-1,-1};
-        dY = {1,1,0};
+        dXD = {0,-1,-1,-1,1};
+        dYD = {1,1,0,-1,-1};
         
     }
     else if (theta == 180)
@@ -389,8 +390,8 @@ bool Is_valid_3D(state* current, double * map,int x_size, int y_size, int collis
     }
     else if (theta == 135)
     {
-        dX = {-1,-1,0};
-        dY = {0,1,-1};
+        dXD = {-1,-1,0,-1,1};
+        dYD = {0,1,-1,1,-1};
         
     }
     else if (theta == 90)
@@ -401,14 +402,27 @@ bool Is_valid_3D(state* current, double * map,int x_size, int y_size, int collis
     }
     else if (theta == 45)
     {
-        dX = {0,1,1};
-        dY = {-1,-1,0};
+        dXD = {0,1,1,-1,1};
+        dYD = {-1,-1,0,-1,1};
         
     }
-    for (int i=0;i<3;i++)
+    if (theta % 90 == 0)
     {
-        int ind = GETMAPINDEX(current->x + dX[i],current->y+dY[i],x_size,y_size);
-        if (map[ind] >= collision_thresh) return false;
+        for (int i=0;i<3;i++)
+        {
+            int ind = GETMAPINDEX(current->x + 3 * dX[i],current->y + 3 * dY[i],x_size,y_size);
+            if (map[ind] >= collision_thresh || map[ind] == 50) return false;
+        }
+        return true;
+    }
+    else
+    {
+        for (int i=0;i<5;i++)
+        {
+            int ind = GETMAPINDEX(current->x + 3 * dXD[i],current->y + 3 * dYD[i],x_size,y_size);
+            if (map[ind] >= collision_thresh || map[ind] == 50) return false;
+        }
+        return true;
     }
     return true;
 }
@@ -485,13 +499,13 @@ void A_star_3D(int dTheta_3D[], int Gx, int Gy, int Gtheta, int Rx, int Ry, int 
                 else cost = 1;
                 
                 // cout<<"cost of successor"<<endl;
-                if ((cost >= 0) && (map[index_succ_2D] < collision_thresh) && successor->state_expanded == false && Is_valid_3D(successor,map,x_size,y_size,collision_thresh)) 
+                if ((cost >= 0) && (map[index_succ_2D] < collision_thresh) && (map[index_succ_2D] != 50) && successor->state_expanded == false && Is_valid_3D(successor,map,x_size,y_size,collision_thresh)) 
                 {
                     if (successor->g_cost > current->g_cost + cost)
                     {                 
                         // cout<<"Valid Successor"<<endl;
                         
-                        successor->h_cost = weight*OPEN_STATES_3D_temp[GETMAPINDEX(successor->x,successor->y,x_size,y_size)]->g_cost;
+                        // successor->h_cost = weight*OPEN_STATES_3D_temp[GETMAPINDEX(successor->x,successor->y,x_size,y_size)]->g_cost;
                         successor->g_cost = current->g_cost +cost;
                         successor->f_cost = successor->g_cost + successor->h_cost;
                         successor->parent = current;
@@ -539,6 +553,9 @@ int main(int argc, char **argv)
     float Gx = argc > 4 ? atof(argv[4]) : 0;
     float Gy = argc > 5 ? atof(argv[5]) : 0;
     int Gtheta = argc > 6 ? atoi(argv[6]) : 0;
+    float resolution = argc > 7 ? atof(argv[7]) : 0.1;
+
+    resolution = 1/resolution;
 
     string cwd = argv[0];
     cwd = cwd.substr(0, cwd.find_last_of("/\\"));
@@ -557,8 +574,8 @@ int main(int argc, char **argv)
     pair<int, int> map_size = get_dimensions(map_file_path);
     
     // Shifting ccordinates to pixel frame
-    shift_coordinates(Rx, Ry, map_size);
-    shift_coordinates(Gx, Gy, map_size);
+    shift_coordinates(Rx, Ry, map_size, resolution);
+    shift_coordinates(Gx, Gy, map_size, resolution);
 
     int Rx_pixel = (int)Rx;
     int Ry_pixel = (int)Ry;
