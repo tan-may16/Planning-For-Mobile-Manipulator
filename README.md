@@ -2,12 +2,13 @@
 16782- Planning and Decision Making project
 
 
-##Overview
+## Overview
 
-This repository contains implementation of motion planning for mobile manipulator in ROS and gazebo environment. The aim of the project is to implement constrained 3D A* algorithm for navigation and variations of RRT for manipulation.
+This repository contains implementation of combined planner for mobile manipulator in ROS and gazebo environment. The aim of the project is to implement constrained 3D A* algorithm for navigation and variations of RRT for manipulation.
+
 The code assumes that ROS (Melodic/Neotic), gazebo as well as other basic dependencies are already installed.
 
-##Installation and Implementation
+## Installation and Implementation
 
 **Step 1: Clone this repository.**
 
@@ -50,13 +51,14 @@ export PYTHONPATH=$PYTHONPATH:/usr/lib/python3.8/dist-packages
 Change the Python version in the last line if different. Save the bash file and close it. 
 
 
-4. Edit the world file. A sample edited world file for office_smalll has been provided in the sample_world folder.
+4. Sample edited world files for office_smalll and office_env_large have been provided in the sample_worlds folder. To use the sample world, replace both files from sample_world folder with the corresponding worlds files from gazebo_models_worlds_collection/worlds/. 
 
-Note: To use the sample world, replace the office_small.world file from sample_world folder with the gazebo_models_worlds_collection/worlds/office_small.world file.
+Note: If you are using small office, replace the office_map.txt from Navigation/small_world with Navigation/code/office_map.txt. The current map loaded is the map for large office.
 
-5. Make sure the world path is correct in the following mobile manipulator launch file: src/mobile_manipulator/launch/mobile_manipulator_gazebo.launch
 
-Note: The path of the world is on line 9. Even if you are using sample world, you will have to edit this path.
+5. Make sure the world path is correct in the following mobile manipulator launch file: src/mobile_manipulator/launch/mobile_manipulator_gazebo.launch. The path of the world is on line 9. Even if you are using sample world, you will have to edit this path.
+
+Note: For using other worlds, you will have to edit the world files, and also create a custom 2D map text for the world for the navigation. Details of how to create that are given the report attached. Replace that newly created map with the office_map.txt in Navigation'code folder.
 
 **Step 4: Build ROS packages.**
 
@@ -69,7 +71,7 @@ catkin_make
 source ~/catkin_ws/devel/setup.bash
 ```
 
-**Step4: Run the combinedPlanner.sh file with appropriate required arguments to visualize and test results.**
+**Step 5: Run the combinedPlanner.sh file with appropriate required arguments and enjoy!**
 ```shell
 cd Planning-For-Mobile-Manipulator
 ./combinedPlanner.sh 2 3 180 2 -3 0 3.14 1.047 0.3 1.57 0
@@ -85,6 +87,14 @@ Similarly,next 3 arguments represent final position of mobile manipulator (x_fin
  Note: The above thetas are in degress.
  
  Last 5 arguments represent the final/desired configuration of manipulator when it reaches the destination. (In radians)
+
+
+## Sample Output
+* **Gazebo world used in the example**
+
+<img src="media/office_env_large.jpg" width="400"/>
+The gazebo world was converted into pgm file using the following 2D gazebo plugin - https://github.com/marinaKollmitz/gazebo_ros_2Dmap_plugin
+
  
  
  

@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  Eigen3 REQUIRED
 )
 
 ## System dependencies are found with CMake's conventions

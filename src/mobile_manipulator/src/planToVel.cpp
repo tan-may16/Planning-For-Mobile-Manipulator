@@ -1,8 +1,6 @@
 #include <ros/ros.h>
 #include <iostream>
 #include <stdio.h>
-#include <Eigen/Geometry>
-#include <Eigen/Dense>
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Pose2D.h>
