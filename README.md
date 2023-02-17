@@ -4,7 +4,9 @@
 
 ## Overview
 
-This repository contains implementation of combined planner for mobile manipulator in ROS and gazebo environment. The aim of the project is to implement constrained 3D A* algorithm for navigation and variations of RRT for manipulation.
+This repository contains implementation of combined planner for mobile manipulator in ROS and gazebo environment. The aim of the project is to implement constrained 3D A* algorithm for navigation and variations of RRT for manipulation. Since the mobile manipulator cannot turn in place, we assume only 3 motion primitives and plan the navigation accordingly.
+
+The complete theory and implementation report can be found here: 16782__Planning_and_Decision_making_Project_Report.pdf
 
 The code assumes that ROS (Melodic/Neotic), gazebo as well as other basic dependencies are already installed.
 
@@ -78,7 +80,7 @@ cd Planning-For-Mobile-Manipulator
 ```
 ## Command Line Arguments
 
-All the command line arguments are mandatory arguments.
+All the command line arguments are mandatory arguments.The coordinate system starts at the centre of the map. All the distances are relative to this coordinate system.
 
 First 3 arguments represent initial position of mobile manipulator(x_init, y_init, theta_init). 
 
@@ -95,6 +97,35 @@ Similarly,next 3 arguments represent final position of mobile manipulator (x_fin
 <img src="media/office_env_large.jpg" width="400"/>
 The gazebo world was converted into pgm file using the following 2D gazebo plugin - https://github.com/marinaKollmitz/gazebo_ros_2Dmap_plugin
 
- 
- 
+<img src="media/demo_screenshot.png" width="400"/>
+Screenshot of Actual Demo. Complete Video-demo link: https://tinyurl.com/mobileManipulator 
+
+ Sample result top view for small office world: 
+ <img src="media/Sample_Output_top_view.mp4" width="400"/>
+
+
+## References
+
+[1] How to Build a Simulated Mobile Robot Base Using ROS 
+
+https://automaticaddison.com/how-to-build-a-simulated-mobile-robot-base-using-ros/
+
+
+[2] Gazebo models and world collection 
+
+https://github.com/chaolmu/gazebo_models_worlds_collection
+
+[3] gazebo 2D plugin: https://github.com/marinaKollmitz/gazebo_ros_2Dmap_plugin
+
+[4] Generate Octomap from Gazebo world
+
+https://github.com/heronsystems/OpenMACE/wiki/Generate-Octomap-from-Gazebo-world
+
+[5] Creating MoveIt Plugins: https://github.com/ros-planning/moveit_tutorials/blob/master/doc/creating_moveit_plugins/plugin_tutorial.rst
+
+[6] Developing a Planning Request Adapter: http://wiki.ros.org/industrial_trajectory_filters/Tutorials/PlanningRequestAdapterTutorial
+
+[7] Collision checking in Robot arm using MoveIt:
+
+https://subscription.packtpub.com/book/hardware-&-creative/9781783551798/10/ch10lvl1sec74/collision-checking-in-robot-arm-using-moveit
  
