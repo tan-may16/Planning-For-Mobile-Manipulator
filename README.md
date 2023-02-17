@@ -95,13 +95,17 @@ Similarly,next 3 arguments represent final position of mobile manipulator (x_fin
 * **Gazebo world used in the example**
 
 <img src="media/office_env_large.jpg" width="400"/>
+
 The gazebo world was converted into pgm file using the following 2D gazebo plugin - https://github.com/marinaKollmitz/gazebo_ros_2Dmap_plugin
 
 <img src="media/demo_screenshot.png" width="400"/>
+
 Screenshot of Actual Demo. Complete Video-demo link: https://tinyurl.com/mobileManipulator 
 
  Sample result top view for small office world: 
- <img src="media/small_office_sample_top_view.gif" width="400"/>
+
+
+<img src="media/small_office_sample_top_view.gif" width="400"/>
 
 
 ## References
