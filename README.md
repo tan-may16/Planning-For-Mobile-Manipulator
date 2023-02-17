@@ -101,7 +101,7 @@ The gazebo world was converted into pgm file using the following 2D gazebo plugi
 Screenshot of Actual Demo. Complete Video-demo link: https://tinyurl.com/mobileManipulator 
 
  Sample result top view for small office world: 
- <img src="media/Sample_Output_top_view.mp4" width="400"/>
+ <img src="media/small_office_sample_top_view.gif" width="400"/>
 
 
 ## References
